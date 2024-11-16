@@ -1,0 +1,5 @@
+#!/bin/bash
+
+apparmor_parser --replace /var/lib/snapd/apparmor/profiles/snap.microk8s.*
+microk8s start
+exit 0

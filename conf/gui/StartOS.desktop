@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=StartOS
+Comment=
+Exec=python3 /home/imslab/runvnc.py
+Icon=go-home
+Path=
+Terminal=true
+StartupNotify=false
