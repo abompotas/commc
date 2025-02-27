@@ -80,16 +80,18 @@ then
   mv /etc/exports /etc/exports.bak
   echo "$5 $4/24(rw,sync,no_subtree_check)" | tee /etc/exports
   systemctl restart nfs-kernel-server
+
+  microk8s helm3 repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+  microk8s helm3 repo update
+  microk8s helm3 install csi-driver-nfs csi-driver-nfs/csi-driver-nfs \
+      --namespace kube-system \
+      --set kubeletDir=/var/snap/microk8s/common/var/lib/kubelet
+  microk8s kubectl wait pod --selector app.kubernetes.io/name=csi-driver-nfs --for condition=ready --namespace kube-system
 fi
 
-microk8s helm3 repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
-microk8s helm3 repo update
-microk8s helm3 install csi-driver-nfs csi-driver-nfs/csi-driver-nfs \
-    --namespace kube-system \
-    --set kubeletDir=/var/snap/microk8s/common/var/lib/kubelet
-microk8s kubectl wait pod --selector app.kubernetes.io/name=csi-driver-nfs --for condition=ready --namespace kube-system
-
-tee ./sc-nfs.yaml > /dev/null <<EOF
+if [ "$6" = true ]
+then
+  tee ./sc-nfs.yaml > /dev/null <<EOF
 # sc-nfs.yaml
 ---
 apiVersion: storage.k8s.io/v1
@@ -107,5 +109,6 @@ mountOptions:
   - nfsvers=4.1
 EOF
 
-microk8s kubectl apply -f ./sc-nfs.yaml
-microk8s kubectl patch storageclass nfs-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  microk8s kubectl apply -f ./sc-nfs.yaml
+  microk8s kubectl patch storageclass nfs-csi -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+fi
